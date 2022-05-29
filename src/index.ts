@@ -1,13 +1,42 @@
-import express, { Request, Response } from 'express'
+import express, {NextFunction, Request, Response} from 'express'
 const app = express()
-const port = 5000
+const port = process.env.PORT || 5000
 
 import cors from 'cors'
 import bodyParser from "body-parser";
 
+let countRequest = 0
+const countMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    ++countRequest
+    res.header('Request-Count', countRequest.toString())
+    console.log('countRequest', countRequest)
+    next()
+}
+const blockedIp = (req: Request, res: Response, next: NextFunction) => {
+    var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+    const result = blockedAddress.find((x: string) => x === ip)
+    if (result) {
+        res.status(403).send()
+        return
+    }
+    next()
+}
+
+const checkContentType = (contentType: string) => (req: Request, res: Response, next: NextFunction) => {
+    const checkContent = req.headers['content-type']
+    if (checkContent === contentType) {
+        next()
+    } else {
+        res.status(400).send()
+    }
+}
+
 app.use(cors())
 // app.use(bodyParser.json())
 app.use(express.json())
+app.use(blockedIp)
+app.use(countMiddleware)
+app.use(checkContentType('content-type'))
 
 let videos = [
     {id: 1, title: 'About JS - 01', author: 'it-incubator.eu'},
@@ -71,6 +100,14 @@ app.put('/videos/:id',(req: Request, res: Response)=>{
         return x
     })
 })
+
+const blockedAddress = [
+    '192.168.0.1',
+    '192.168.0.2',
+    '192.168.0.3',
+    '192.168.0.4',
+    '192.168.0.5'
+]
 
 app.listen(port, () => {
     console.log(`Example`)
