@@ -1,6 +1,6 @@
 import express, {NextFunction, Request, Response} from 'express'
 const app = express()
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 3000
 
 import cors from 'cors'
 import bodyParser from "body-parser";
@@ -32,11 +32,11 @@ const checkContentType = (contentType: string) => (req: Request, res: Response, 
 }
 
 app.use(cors())
-// app.use(bodyParser.json())
+app.use(bodyParser.json())
 app.use(express.json())
 app.use(blockedIp)
 app.use(countMiddleware)
-app.use(checkContentType('content-type'))
+// app.use(checkContentType('content-type'))
 
 let videos = [
     {id: 1, title: 'About JS - 01', author: 'it-incubator.eu'},
@@ -48,6 +48,7 @@ let videos = [
 
 app.get('/', (req: Request, res: Response ) => {
     res.send('Hello: World!')
+    return
 })
 
 app.get('/videos', (req: Request, res: Response ) => {
